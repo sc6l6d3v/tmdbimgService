@@ -23,7 +23,7 @@ The aforementioned command will build the image and tag it with the latest commi
 To run said image:
 
 ```
-docker run --env MONGOURI --env MONGORO --env REDISKEY --env REDISHOST \
+docker run --env REDISKEY --env REDISHOST \
      	   --env TMDBKEY --env PORT --env BINDHOST \
            --env CLIENTPOOL --env SERVERPOOL \
            --restart on-failure \
