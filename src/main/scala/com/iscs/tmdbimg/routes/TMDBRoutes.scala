@@ -17,10 +17,10 @@ object TMDBRoutes {
     val dsl = new Http4sDsl[F]{}
     import dsl._
     HttpRoutes.of[F] {
-      case _ @ GET -> Root / "meta" / meta =>
+      case _ @ GET -> Root / "meta" / imdbKey =>
         for {
-          metaJson <- C.getMeta(meta.toLowerCase)
-          _ <- Sync[F].delay(L.info(s""""meta request" $meta"""))
+          metaJson <- C.getPosterPath(imdbKey.toLowerCase)
+          _ <- Sync[F].delay(L.info(s""""meta request" $imdbKey"""))
           resp <- Ok(metaJson.toJson)
         } yield resp
     }

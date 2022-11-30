@@ -4,7 +4,7 @@ import cats.effect.Sync
 import cats.implicits._
 import com.iscs.tmdbimg.api.{FIND, TMDBApiUri}
 import com.iscs.tmdbimg.model.MediaTypes._
-import com.iscs.tmdbimg.model.{MediaTypes, Meta}
+import com.iscs.tmdbimg.model.{EpisodeResults, MediaTypes, Meta, MovieResults, PersonResults, TVResults}
 import com.typesafe.scalalogging.Logger
 import dev.profunktor.redis4cats.RedisCommands
 import sttp.capabilities
@@ -14,7 +14,7 @@ import sttp.model.{Uri, UriInterpolator}
 import zio.json._
 
 trait TMDBImg[F[_]] extends Cache[F] {
-  def getMeta(imdbid: String): F[Option[Meta]]
+  def getPosterPath(imdbid: String): F[Option[String]]
 }
 
 object TMDBImg extends UriInterpolator {
@@ -63,7 +63,7 @@ object TMDBImg extends UriInterpolator {
       } yield maybeTMDB
     }
 
-    override def getMeta(imdbid: String): F[Option[Meta]] = {
+    def getMeta(imdbid: String): F[Option[Meta]] = {
       for {
         key <- Sync[F].delay(s"tmdb:$imdbid")
         hasKey <- cmd.exists(key)
@@ -81,6 +81,26 @@ object TMDBImg extends UriInterpolator {
         }
       } yield resp
     }
+
+    def meta2Poster(meta: Meta): F[Option[String]] = for {
+      path <- Sync[F].delay{
+        meta match {
+          case movie: MovieResults => Some(movie.poster_path)
+          case series: TVResults   => Some(series.poster_path)
+          case episode: EpisodeResults => Some(episode.still_path)
+          case person: PersonResults => Some(person.known_for.head.poster_path)
+          case _                     => None
+        }
+      }
+    } yield path
+
+    override def getPosterPath(imdbId: String): F[Option[String]] = for {
+      mayBeMeta <- getMeta(imdbId)
+      path <- mayBeMeta match {
+          case Some(meta) => meta2Poster(meta)
+          case _          => Sync[F].delay(Option.empty[String])
+        }
+    } yield path
   }
 }
 
