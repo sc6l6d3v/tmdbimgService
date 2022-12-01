@@ -7,14 +7,14 @@ object Dependencies {
     val LogbackVersion = "1.2.3"
     val catsRetryVersion = "1.1.0"
     val log4catsVersion = "2.3.1"
-    val fs2Version = "3.2.8"
+    val fs2Version = "3.3.0"
     val loggingVersion = "3.9.2"
     val redis4catsVersion = "1.2.0"
     val mongoScalaVersion = "4.2.3"
     val mongo4catsVersion = "0.4.7"
     val zioJsonVersion = "0.3.0"
     val zioTestVersion = "2.0.4"
-    val sttpVersion = "3.5.2"
+    val sttpVersion = "3.8.3"
     val WeaverTestVersion = "0.7.15"
   }
 
@@ -25,7 +25,7 @@ object Dependencies {
   }
 
   object sttp {
-    val client3 = "com.softwaremill.sttp.client3" %% "async-http-client-backend-fs2" % Versions.sttpVersion
+    val client3 = "com.softwaremill.sttp.client3" %% "fs2" % Versions.sttpVersion
   }
 
   object zio {

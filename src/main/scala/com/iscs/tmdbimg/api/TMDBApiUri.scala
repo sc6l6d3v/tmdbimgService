@@ -7,7 +7,8 @@ case object POSTER extends PATHTYPE
 final case class TMDBApiUri(base: String, imdbId: Option[String], imagePath: Option[String])
 
 object TMDBApiUri {
-  val base = "https://api.themoviedb.org"
+  val findBase = "https://api.themoviedb.org"
+  val posterBase = "https://image.tmdb.org"
   val findPath = "/3/find"
   val getPoster = "/t/p"
   val keyParam = "api_key"
@@ -21,14 +22,14 @@ object TMDBApiUri {
 
   def apply(searchType: PATHTYPE, queryVal: String): TMDBApiUri = {
     searchType match {
-      case FIND   => TMDBApiUri(base, Some(queryVal), None)
-      case POSTER => TMDBApiUri(base, None, Some(queryVal))
+      case FIND   => TMDBApiUri(findBase, Some(queryVal), None)
+      case POSTER => TMDBApiUri(posterBase, None, Some(queryVal))
     }
   }
 
   def builder(tmdb: TMDBApiUri): String = (tmdb.imdbId, tmdb.imagePath) match {
     case (Some(id), None)   => s"${tmdb.base}$findPath/$id?$keyField$reqdParams"
-    case (None, Some(path)) => s"${tmdb.base}$getPoster/$width/$path?$keyField"
+    case (None, Some(path)) => s"${tmdb.base}$getPoster/$width$path?$keyField"
     case _                  => ""
   }
 

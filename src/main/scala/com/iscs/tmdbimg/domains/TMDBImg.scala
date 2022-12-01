@@ -2,11 +2,12 @@ package com.iscs.tmdbimg.domains
 
 import cats.effect.Sync
 import cats.implicits._
-import com.iscs.tmdbimg.api.{FIND, TMDBApiUri}
+import com.iscs.tmdbimg.api.{FIND, POSTER, TMDBApiUri}
 import com.iscs.tmdbimg.model.MediaTypes._
 import com.iscs.tmdbimg.model.{EpisodeResults, MediaTypes, Meta, MovieResults, PersonResults, TVResults}
 import com.typesafe.scalalogging.Logger
 import dev.profunktor.redis4cats.RedisCommands
+import fs2.Stream
 import sttp.capabilities
 import sttp.capabilities.fs2.Fs2Streams
 import sttp.client3._
@@ -14,7 +15,7 @@ import sttp.model.{Uri, UriInterpolator}
 import zio.json._
 
 trait TMDBImg[F[_]] extends Cache[F] {
-  def getPosterPath(imdbid: String): F[Option[String]]
+  def getPoster(imdbid: String): Stream[F, Byte]
 }
 
 object TMDBImg extends UriInterpolator {
@@ -26,11 +27,11 @@ object TMDBImg extends UriInterpolator {
 
   def fromMeta(ip: String): Option[Meta] = ip.fromJson[Meta] match {
     case Right(ip) => Some(ip)
-    case Left(_)   => None
+    case Left(_) => None
   }
 
-  def impl[F[_]: Sync](S: SttpBackend[F, Fs2Streams[F] with capabilities.WebSockets])
-                      (implicit cmd: RedisCommands[F, String, String]): TMDBImg[F] = new TMDBImg[F]{
+  def impl[F[_] : Sync](S: SttpBackend[F, Fs2Streams[F] with capabilities.WebSockets])
+                       (implicit cmd: RedisCommands[F, String, String]): TMDBImg[F] = new TMDBImg[F] {
 
     def getMetaData(tmdbUri: Uri): F[Option[Meta]] = {
       for {
@@ -48,8 +49,8 @@ object TMDBImg extends UriInterpolator {
                 jsonStr
             }
             val fromOutput = replacedOutput
-              .fromJson[MediaTypes].map{ mtype =>
-              mtype.productIterator.collect { case ssss : List[Meta] if ssss.nonEmpty => (ssss, ssss.nonEmpty)}
+              .fromJson[MediaTypes].map { mtype =>
+              mtype.productIterator.collect { case ssss: List[Meta] if ssss.nonEmpty => (ssss, ssss.nonEmpty) }
                 .flatMap(_._1)
                 .toList
             }
@@ -61,6 +62,19 @@ object TMDBImg extends UriInterpolator {
           }.getOrElse(Option.empty[Meta])
         }
       } yield maybeTMDB
+    }
+
+    def getPosterData(tmdbPosterUri: Uri): F[Option[Array[Byte]]] = {
+      for {
+        imgBytesReq <- Sync[F].delay(quickRequest.contentType("image/jpeg").get(tmdbPosterUri).response(asByteArray))
+        responseEither <- imgBytesReq.send(S)
+        maybeBytes <- Sync[F].delay {
+          responseEither.body.map { bodyStr =>
+            L.info(s"got image: ${bodyStr.length}")
+            Some(bodyStr)
+          }.getOrElse(Option.empty[Array[Byte]])
+        }
+      } yield maybeBytes
     }
 
     def getMeta(imdbid: String): F[Option[Meta]] = {
@@ -82,25 +96,59 @@ object TMDBImg extends UriInterpolator {
       } yield resp
     }
 
+    def getPosterImg(posterPath: String): F[Option[Array[Byte]]] = {
+      for {
+        key <- Sync[F].delay(s"tmdbimg:$posterPath")
+        hasKey <- cmd.exists(key)
+        tmdbExpr <- Sync[F].delay(TMDBApiUri.builder(TMDBApiUri(POSTER, posterPath)))
+        tmdbUri <- Sync[F].delay(uri"$tmdbExpr")
+        resp <- if (!hasKey) {
+          for {
+            tmdbMaybe <- getPosterData(tmdbUri)
+            _ <- tmdbMaybe match {
+              case Some(tmdb) => setRedisKey(key, tmdb.map(_.toChar).mkString)
+            }
+          } yield tmdbMaybe
+        } else
+          getImgFromRedis(key)
+      } yield resp
+    }
+
     def meta2Poster(meta: Meta): F[Option[String]] = for {
-      path <- Sync[F].delay{
+      path <- Sync[F].delay {
         meta match {
           case movie: MovieResults => Some(movie.poster_path)
-          case series: TVResults   => Some(series.poster_path)
+          case series: TVResults => Some(series.poster_path)
           case episode: EpisodeResults => Some(episode.still_path)
           case person: PersonResults => Some(person.known_for.head.poster_path)
-          case _                     => None
+          case _ => None
         }
       }
     } yield path
 
-    override def getPosterPath(imdbId: String): F[Option[String]] = for {
+    def getPosterPath(imdbId: String): F[Option[String]] = for {
       mayBeMeta <- getMeta(imdbId)
       path <- mayBeMeta match {
-          case Some(meta) => meta2Poster(meta)
-          case _          => Sync[F].delay(Option.empty[String])
-        }
+        case Some(meta) => meta2Poster(meta)
+        case _ => Sync[F].delay(Option.empty[String])
+      }
     } yield path
+
+    override def getPoster(imdbId: String): Stream[F, Byte] = for {
+      maybeBytes <- Stream.eval(getPosterEffect(imdbId))
+      bytes <- maybeBytes match {
+        case Some(imgBytes) => Stream.emits(imgBytes)
+        case _              => Stream.empty
+      }
+    } yield bytes
+
+    def getPosterEffect(imdbId: String): F[Option[Array[Byte]]] = for {
+      maybePosterPath <- getPosterPath(imdbId)
+      imgBytes <- maybePosterPath match {
+        case Some(posterPath) => getPosterImg(posterPath)
+        case _ => Sync[F].delay(Option.empty[Array[Byte]])
+      }
+    } yield imgBytes
   }
 }
 

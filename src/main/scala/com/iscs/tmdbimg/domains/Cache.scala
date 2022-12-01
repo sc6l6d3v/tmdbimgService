@@ -13,10 +13,18 @@ trait Cache[F[_]] {
   private val expiryTime = 15.minutes
 
   def getMetaFromRedis[S[_]: Sync](key: String)(implicit cmd: RedisCommands[S, String, String]): S[Option[Meta]] = for {
-    memValOpt <- cmd.get(key)
-    retrieved <- Sync[S].delay(memValOpt.flatMap { memVal =>
-      L.info("\"retrieved key\" key={} value={}", key, memVal)
-      fromMeta(memVal)
+    strOpt <- cmd.get(key)
+    retrieved <- Sync[S].delay(strOpt.flatMap { str =>
+      L.info("\"retrieved key\" key={} value={}", key, str)
+      fromMeta(str)
+    })
+  } yield retrieved
+
+  def getImgFromRedis[S[_]: Sync](key: String)(implicit cmd: RedisCommands[S, String, String]): S[Option[Array[Byte]]] = for {
+    strOpt <- cmd.get(key)
+    retrieved <- Sync[S].delay(strOpt.flatMap { str =>
+      L.info("\"retrieved key\" key={} value={}", key, str)
+      Some(str.getBytes)
     })
   } yield retrieved
 
