@@ -10,7 +10,7 @@ import sttp.client3.httpclient.fs2.HttpClientFs2Backend
 object Main extends IOApp {
   private val L = Logger[this.type]
 
-  val resources = for {
+  private val resources = for {
     redis       <- new RedisConfig[IO]().resource
     sttpRes     <- HttpClientFs2Backend.resource[IO]()
   } yield (redis, sttpRes)

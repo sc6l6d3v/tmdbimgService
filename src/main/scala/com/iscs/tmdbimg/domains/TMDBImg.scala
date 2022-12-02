@@ -1,6 +1,7 @@
 package com.iscs.tmdbimg.domains
 
 import cats.effect.Sync
+import cats.effect.kernel.Clock
 import cats.implicits._
 import com.iscs.tmdbimg.api.{FIND, POSTER, TMDBApiUri}
 import com.iscs.tmdbimg.model.MediaTypes._
@@ -14,12 +15,15 @@ import sttp.client3._
 import sttp.model.{Uri, UriInterpolator}
 import zio.json._
 
+import java.util.Base64
+
 trait TMDBImg[F[_]] extends Cache[F] {
   def getPoster(imdbid: String): Stream[F, Byte]
 }
 
 object TMDBImg extends UriInterpolator {
   private val L = Logger[this.type]
+  private val B64Encoder = Base64.getEncoder
 
   def apply[F[_]](implicit ev: TMDBImg[F]): TMDBImg[F] = ev
 
@@ -85,9 +89,11 @@ object TMDBImg extends UriInterpolator {
         tmdbUri <- Sync[F].delay(uri"$tmdbExpr")
         resp <- if (!hasKey) {
           for {
-            tmdbMaybe <- getMetaData(tmdbUri)
+            (getTime, tmdbMaybe) <- Clock[F].timed(getMetaData(tmdbUri))
+            _ <- Sync[F].delay(L.info(s"got MetaData in {} ms", getTime.toMillis))
             _ <- tmdbMaybe match {
               case Some(tmdb) => setRedisKey(key, tmdb.toJson)
+              case _          => Sync[F].unit
             }
           } yield tmdbMaybe
         } else {
@@ -104,9 +110,11 @@ object TMDBImg extends UriInterpolator {
         tmdbUri <- Sync[F].delay(uri"$tmdbExpr")
         resp <- if (!hasKey) {
           for {
-            tmdbMaybe <- getPosterData(tmdbUri)
+            (getTime, tmdbMaybe) <- Clock[F].timed(getPosterData(tmdbUri))
+            _ <- Sync[F].delay(L.info(s"got PosterData in {} ms", getTime.toMillis))
             _ <- tmdbMaybe match {
-              case Some(tmdb) => setRedisKey(key, tmdb.map(_.toChar).mkString)
+              case Some(tmdb) => setRedisKey(key, B64Encoder.encodeToString(tmdb)) //tmdb.map(_.toChar).mkString)
+              case _          => Sync[F].unit
             }
           } yield tmdbMaybe
         } else
@@ -134,14 +142,6 @@ object TMDBImg extends UriInterpolator {
       }
     } yield path
 
-    override def getPoster(imdbId: String): Stream[F, Byte] = for {
-      maybeBytes <- Stream.eval(getPosterEffect(imdbId))
-      bytes <- maybeBytes match {
-        case Some(imgBytes) => Stream.emits(imgBytes)
-        case _              => Stream.empty
-      }
-    } yield bytes
-
     def getPosterEffect(imdbId: String): F[Option[Array[Byte]]] = for {
       maybePosterPath <- getPosterPath(imdbId)
       imgBytes <- maybePosterPath match {
@@ -149,6 +149,14 @@ object TMDBImg extends UriInterpolator {
         case _ => Sync[F].delay(Option.empty[Array[Byte]])
       }
     } yield imgBytes
+
+    override def getPoster(imdbId: String): Stream[F, Byte] = for {
+      maybeBytes <- Stream.eval(getPosterEffect(imdbId))
+      bytes <- maybeBytes match {
+        case Some(imgBytes) => Stream.emits(imgBytes)
+        case _              => Stream.empty
+      }
+    } yield bytes
   }
 }
 
