@@ -14,10 +14,15 @@ object TMDBRoutes {
     val dsl = new Http4sDsl[F]{}
     import dsl._
     HttpRoutes.of[F] {
-      case _ @ GET -> Root / "meta" / imdbKey =>
+      case _ @ GET -> "meta" /: imdbKey  =>
         Ok(for {
-          _ <- Stream.eval(Sync[F].delay(L.info(s""""meta request" $imdbKey""")))
-          resp <- C.getPoster(imdbKey.toLowerCase)
+          pathParts <- Stream.eval(Sync[F].delay(imdbKey.segments.toList))
+          _ <- Stream.eval(Sync[F].delay(L.info(s""""meta request" key=$imdbKey size=${pathParts.head}""")))
+          resp <- C.getPoster(pathParts.head.encoded,
+          if (pathParts.size == 2)
+            pathParts.tail.head.encoded
+          else
+            "S")
         } yield resp)
     }
   }

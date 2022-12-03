@@ -4,6 +4,8 @@ sealed trait PATHTYPE
 case object FIND extends PATHTYPE
 case object POSTER extends PATHTYPE
 
+
+
 final case class TMDBApiUri(base: String, imdbId: Option[String], imagePath: Option[String])
 
 object TMDBApiUri {
@@ -14,7 +16,8 @@ object TMDBApiUri {
   val keyParam = "api_key"
   val keyValue = sys.env.getOrElse("TMDBKEY", "NOKEY")
   val findParams = Map("language" -> "en-US", "external_source" -> "imdb_id")
-  val width = "w200"
+  val smallWidth = "w200"
+  val bigWidth = "w500"
   val keyField = s"$keyParam=$keyValue"
   val reqdParams = findParams.map{ case (k,v) =>
     s"$k=$v"
@@ -27,9 +30,15 @@ object TMDBApiUri {
     }
   }
 
-  def builder(tmdb: TMDBApiUri): String = (tmdb.imdbId, tmdb.imagePath) match {
+  private def posterSize(size: Option[String]): String = size match {
+    case Some("B") => bigWidth
+    case Some("S") => smallWidth
+    case _         => smallWidth
+  }
+
+  def builder(tmdb: TMDBApiUri, size: Option[String] = None): String = (tmdb.imdbId, tmdb.imagePath) match {
     case (Some(id), None)   => s"${tmdb.base}$findPath/$id?$keyField$reqdParams"
-    case (None, Some(path)) => s"${tmdb.base}$getPoster/$width$path?$keyField"
+    case (None, Some(path)) => s"${tmdb.base}$getPoster/${posterSize(size)}$path?$keyField"
     case _                  => ""
   }
 

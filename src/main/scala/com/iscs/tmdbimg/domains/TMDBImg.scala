@@ -18,7 +18,7 @@ import zio.json._
 import java.util.Base64
 
 trait TMDBImg[F[_]] extends Cache[F] {
-  def getPoster(imdbid: String): Stream[F, Byte]
+  def getPoster(imdbid: String, size: String): Stream[F, Byte]
 }
 
 object TMDBImg extends UriInterpolator {
@@ -48,7 +48,7 @@ object TMDBImg extends UriInterpolator {
               if (jsonStr.contains(s"""$k":[{"""))
                 jsonStr
                   .replaceAll(s"""$k":\\[\\{""", s"""$k":[{"$v":{""")
-                  .replaceAll("""\}\]""", """}}]""")
+                  .replaceAll("""}]""", """}}]""")
               else
                 jsonStr
             }
@@ -102,11 +102,11 @@ object TMDBImg extends UriInterpolator {
       } yield resp
     }
 
-    def getPosterImg(posterPath: String): F[Option[Array[Byte]]] = {
+    def getPosterImg(posterPath: String, size: String): F[Option[Array[Byte]]] = {
       for {
-        key <- Sync[F].delay(s"tmdbimg:$posterPath")
+        key <- Sync[F].delay(s"tmdbimg:$size:$posterPath")
         hasKey <- cmd.exists(key)
-        tmdbExpr <- Sync[F].delay(TMDBApiUri.builder(TMDBApiUri(POSTER, posterPath)))
+        tmdbExpr <- Sync[F].delay(TMDBApiUri.builder(TMDBApiUri(POSTER, posterPath), Some(size)))
         tmdbUri <- Sync[F].delay(uri"$tmdbExpr")
         resp <- if (!hasKey) {
           for {
@@ -142,16 +142,16 @@ object TMDBImg extends UriInterpolator {
       }
     } yield path
 
-    def getPosterEffect(imdbId: String): F[Option[Array[Byte]]] = for {
+    def getPosterEffect(imdbId: String, size: String): F[Option[Array[Byte]]] = for {
       maybePosterPath <- getPosterPath(imdbId)
       imgBytes <- maybePosterPath match {
-        case Some(posterPath) => getPosterImg(posterPath)
+        case Some(posterPath) => getPosterImg(posterPath, size)
         case _ => Sync[F].delay(Option.empty[Array[Byte]])
       }
     } yield imgBytes
 
-    override def getPoster(imdbId: String): Stream[F, Byte] = for {
-      maybeBytes <- Stream.eval(getPosterEffect(imdbId))
+    override def getPoster(imdbId: String, size: String): Stream[F, Byte] = for {
+      maybeBytes <- Stream.eval(getPosterEffect(imdbId, size))
       bytes <- maybeBytes match {
         case Some(imgBytes) => Stream.emits(imgBytes)
         case _              => Stream.empty

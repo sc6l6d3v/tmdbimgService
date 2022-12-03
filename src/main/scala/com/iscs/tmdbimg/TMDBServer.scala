@@ -30,7 +30,7 @@ object TMDBServer {
       httpApp <- Sync[F].delay(
         Router("/" -> TMDBRoutes.TmdbRoutes[F](geoip))
           .orNotFound)
-      finalHttpApp <- Sync[F].delay(hpLogger.httpApp(logHeaders = true, logBody = true)(httpApp))
+      finalHttpApp <- Sync[F].delay(hpLogger.httpApp(logHeaders = true, logBody = false)(httpApp))
     } yield finalHttpApp
   }
 
