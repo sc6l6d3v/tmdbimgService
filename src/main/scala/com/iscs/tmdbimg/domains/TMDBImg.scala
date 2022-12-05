@@ -74,7 +74,7 @@ object TMDBImg extends UriInterpolator {
         responseEither <- imgBytesReq.send(S)
         maybeBytes <- Sync[F].delay {
           responseEither.body.map { bodyStr =>
-            L.info(s"got image: ${bodyStr.length}")
+            L.info(s"got image: ${bodyStr.length}b")
             Some(bodyStr)
           }.getOrElse(Option.empty[Array[Byte]])
         }

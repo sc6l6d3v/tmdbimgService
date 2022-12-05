@@ -13,4 +13,5 @@ docker build --build-arg rediskey=$REDISKEY \
              --build-arg bindhost=$BINDHOST \
              --build-arg clientpool=$CLIENTPOOL \
              --build-arg serverpool=$SERVERPOOL \
+             --build-arg OPT_PKGS="telnet bash" \
              -t tmdbimg:rest .

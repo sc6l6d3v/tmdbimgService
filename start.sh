@@ -1,7 +1,7 @@
 # load env vars
 export  $(cat .env | grep -v ^\# | xargs)
 
-REDISKEY=$REDISKEY REDISHOST=192.168.15.47 \
+REDISKEY=$REDISKEY REDISHOST=192.168.4.47 \
     TMDBKEY=$TMDBKEY \
     PORT=8080 \
     BINDHOST=0.0.0.0 \
@@ -11,6 +11,5 @@ docker run --env REDISKEY --env REDISHOST \
      	   --env TMDBKEY --env PORT --env BINDHOST \
            --env CLIENTPOOL --env SERVERPOOL \
            --restart on-failure \
-	   --add-host=wengen.iscs-i.com:192.168.15.66 \
            -d -p 8082:8080 tmdbimg:rest
 

@@ -6,6 +6,7 @@ lazy val root = (project in file("."))
     name := "tmdbimgService",
     version := "0.1-SNAPSHOT",
     scalaVersion := "2.13.8",
+    scalacOptions ++= Seq("-target:17"),
     libraryDependencies ++= Seq(
       http4s.blaze_server,
       http4s.dsl,

@@ -6,12 +6,12 @@
 #
 
 # Pull base image
-FROM openjdk:8
+FROM bellsoft/liberica-openjdk-alpine:17.0.5
 
 # Env variables
 ENV SCALA_VERSION 2.13.8
-ENV SBT_VERSION   1.0.2
-ENV APP_NAME      tmdbService
+# ENV SBT_VERSION   1.3.10
+ENV APP_NAME      tmdbimgService
 ENV APP_VERSION   0.1-SNAPSHOT
 
 ARG rediskey=key
@@ -35,10 +35,10 @@ ENV SERVERPOOL=$serverpool
 
 # Install Scala
 ## Piping curl directly in tar
-RUN \
-  curl -fsL https://downloads.typesafe.com/scala/$SCALA_VERSION/scala-$SCALA_VERSION.tgz | tar xfz - -C /root/ && \
-  echo >> /root/.bashrc && \
-  echo "export PATH=~/scala-$SCALA_VERSION/bin:$PATH" >> /root/.bashrc
+# RUN \
+#  curl -fsL https://downloads.typesafe.com/scala/$SCALA_VERSION/scala-$SCALA_VERSION.tgz | tar xfz - -C /root/ && \
+#  echo >> /root/.bashrc && \
+#  echo "export PATH=~/scala-$SCALA_VERSION/bin:$PATH" >> /root/.bashrc
 
 # Install sbt
 #RUN \
