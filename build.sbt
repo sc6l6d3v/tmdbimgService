@@ -30,7 +30,7 @@ lazy val root = (project in file("."))
     testFrameworks += new TestFramework("weaver.framework.CatsEffect"),
     addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
     addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
-    Revolver.enableDebugging(5050, true)
+    Revolver.enableDebugging(5050, suspend = true)
   )
 
 scalacOptions ++= Seq(
@@ -43,7 +43,7 @@ scalacOptions ++= Seq(
   //"-Xfatal-warnings",
 )
 
-assemblyMergeStrategy in assembly := {
+assembly / assemblyMergeStrategy := {
   case PathList("META-INF", _ @ _*) => MergeStrategy.discard
   case _ => MergeStrategy.first
 }

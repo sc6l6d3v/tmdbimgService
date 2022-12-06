@@ -10,8 +10,6 @@ object Dependencies {
     val fs2Version = "3.3.0"
     val loggingVersion = "3.9.2"
     val redis4catsVersion = "1.2.0"
-    val mongoScalaVersion = "4.2.3"
-    val mongo4catsVersion = "0.4.7"
     val zioJsonVersion = "0.3.0"
     val zioTestVersion = "2.0.4"
     val sttpVersion = "3.8.3"
