@@ -8,7 +8,6 @@ lazy val root = (project in file("."))
     scalaVersion := "2.13.8",
     scalacOptions ++= Seq("-target:17"),
     libraryDependencies ++= Seq(
-      http4s.blaze_server,
       http4s.dsl,
       http4s.server,
       sttp.client3,
