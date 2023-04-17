@@ -27,8 +27,6 @@ object TMDBImg extends UriInterpolator {
 
   def apply[F[_]](implicit ev: TMDBImg[F]): TMDBImg[F] = ev
 
-  final case class DataError(e: Throwable) extends RuntimeException
-
   def fromMeta(ip: String): Option[Meta] = ip.fromJson[Meta] match {
     case Right(ip) => Some(ip)
     case Left(_) => None
@@ -45,11 +43,13 @@ object TMDBImg extends UriInterpolator {
           body.map { bodyStr =>
             L.info(s"got raw: $bodyStr")
             val replacedOutput = keyMapping.foldLeft(bodyStr) { case (jsonStr, (k, v)) =>
-              if (jsonStr.contains(s"""$k":[{"""))
+              val matchVal = s"""$k":[{"""
+              if (jsonStr.contains(matchVal)) {
+                val regexVal = s"""$k":\\[\\{"""
                 jsonStr
-                  .replaceAll(s"""$k":\\[\\{""", s"""$k":[{"$v":{""")
+                  .replaceAll(regexVal, s"""$k":[{"$v":{""")
                   .replaceAll("""}]""", """}}]""")
-              else
+              } else
                 jsonStr
             }
             val fromOutput = replacedOutput
@@ -59,15 +59,13 @@ object TMDBImg extends UriInterpolator {
                 .toList
             }
             L.info(s"got decoding: $fromOutput")
-            fromOutput.map { tmdb =>
-              tmdb match {
-                case head :: tail =>
-                  L.info(s"converted body: ${tmdb.head}")
-                  Some(tmdb.head)
-                case _            =>
-                  L.warn(s"no data key=${tmdbUri.path.last}")
-                  Option.empty[Meta]
-              }
+            fromOutput.map {
+              case head :: _ =>
+                L.info(s"converted body: $head")
+                Some(head)
+              case _ =>
+                L.warn(s"no data key=${tmdbUri.path.last}")
+                Option.empty[Meta]
             }.getOrElse(Option.empty[Meta])
           }.getOrElse(Option.empty[Meta])
         }
