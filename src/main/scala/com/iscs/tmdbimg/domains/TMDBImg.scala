@@ -65,6 +65,7 @@ object TMDBImg extends UriInterpolator {
                   L.info(s"converted body: ${tmdb.head}")
                   Some(tmdb.head)
                 case _            =>
+                  L.warn(s"no data key=${tmdbUri.path.last}")
                   Option.empty[Meta]
               }
             }.getOrElse(Option.empty[Meta])
