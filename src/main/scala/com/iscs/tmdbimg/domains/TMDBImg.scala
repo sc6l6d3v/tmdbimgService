@@ -60,8 +60,13 @@ object TMDBImg extends UriInterpolator {
             }
             L.info(s"got decoding: $fromOutput")
             fromOutput.map { tmdb =>
-              L.info(s"converted body: ${tmdb.head}")
-              Some(tmdb.head)
+              tmdb match {
+                case head :: tail =>
+                  L.info(s"converted body: ${tmdb.head}")
+                  Some(tmdb.head)
+                case _            =>
+                  Option.empty[Meta]
+              }
             }.getOrElse(Option.empty[Meta])
           }.getOrElse(Option.empty[Meta])
         }

@@ -14,4 +14,4 @@ docker build --build-arg rediskey=$REDISKEY \
              --build-arg clientpool=$CLIENTPOOL \
              --build-arg serverpool=$SERVERPOOL \
              --build-arg OPT_PKGS="telnet bash" \
-             -t tmdbimg:rest .
+             -t nanothermite/tmdbimg:rest .
