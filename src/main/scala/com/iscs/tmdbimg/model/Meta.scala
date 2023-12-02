@@ -15,10 +15,10 @@ object TMDBPersonKnownFor {
 }
 
 @jsonHint("MovieResults")
-final case class MovieResults(adult: Boolean, backdrop_path: String, id: Int, title: String, original_language: String,
-                        original_title: String, overview: String, poster_path: String, media_type: String,
-                        genre_ids: List[Int], popularity: Double, release_date: String, video: Boolean,
-                        vote_average: Double, vote_count: Int) extends Meta
+final case class MovieResults(adult: Boolean, backdrop_path: Option[String], id: Int, title: String,
+                              original_language: String, original_title: String, overview: String, poster_path: String,
+                              media_type: String, genre_ids: List[Int], popularity: Double, release_date: String,
+                              video: Boolean, vote_average: Double, vote_count: Int) extends Meta
 
 object MovieResults {
   implicit val movieResultsDecoder: JsonDecoder[MovieResults] = DeriveJsonDecoder.gen[MovieResults]
