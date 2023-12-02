@@ -33,43 +33,36 @@ object TMDBImg extends UriInterpolator {
   }
 
   def impl[F[_] : Sync](S: SttpBackend[F, Fs2Streams[F] with capabilities.WebSockets])
-                       (implicit cmd: RedisCommands[F, String, String]): TMDBImg[F] = new TMDBImg[F] {
+                       (implicit cmd: RedisCommands[F, String, String],
+                        defImgMap: Map[String, Array[Byte]]): TMDBImg[F] = new TMDBImg[F] {
 
     def getMetaData(tmdbUri: Uri): F[Option[Meta]] = {
-      for {
-        responseEither <- basicRequest.get(tmdbUri).send(S)
-        maybeTMDB <- Sync[F].delay {
-          val body = responseEither.body
-          body.map { bodyStr =>
+      basicRequest.get(tmdbUri).send(S).flatMap { responseEither =>
+        responseEither.body match {
+          case Left(error) =>
+            L.warn(s"Request failed: $error")
+            Sync[F].pure(Option.empty[Meta])
+          case Right(bodyStr) =>
             L.info(s"got raw: $bodyStr")
-            val replacedOutput = keyMapping.foldLeft(bodyStr) { case (jsonStr, (k, v)) =>
-              val matchVal = s"""$k":[{"""
-              if (jsonStr.contains(matchVal)) {
-                val regexVal = s"""$k":\\[\\{"""
-                jsonStr
-                  .replaceAll(regexVal, s"""$k":[{"$v":{""")
-                  .replaceAll("""}]""", """}}]""")
-              } else
-                jsonStr
-            }
-            val fromOutput = replacedOutput
-              .fromJson[MediaTypes].map { mtype =>
-              mtype.productIterator.collect { case ssss: List[Meta] if ssss.nonEmpty => (ssss, ssss.nonEmpty) }
-                .flatMap(_._1)
-                .toList
-            }
-            L.info(s"got decoding: $fromOutput")
-            fromOutput.map {
-              case head :: _ =>
-                L.info(s"converted body: $head")
-                Some(head)
-              case _ =>
-                L.warn(s"no data key=${tmdbUri.path.last}")
+            val decoded = keyMapping.foldLeft(bodyStr) { case (jsonStr, (k, v)) =>
+              val pattern     = s""""$k":\\[\\{"""
+              val replacement = s""""$k":\\[{"type":"$v","""
+              jsonStr.replaceAll(pattern, replacement)
+            }.fromJson[MediaTypes].left.map(new Exception(_))
+            // Convert Either[String, MediaTypes] to Either[Throwable, MediaTypes]
+            Sync[F].fromEither(decoded).map { mt =>
+              if (mt.movie_results.nonEmpty) mt.movie_results.headOption
+              else if (mt.person_results.nonEmpty) mt.person_results.headOption
+              else if (mt.tv_results.nonEmpty) mt.tv_results.headOption
+              else if (mt.tv_episode_results.nonEmpty) mt.tv_episode_results.headOption
+              else if (mt.tv_season_results.nonEmpty) mt.tv_season_results.headOption
+              else {
+                L.warn(s"No data key=${tmdbUri.path.last}")
                 Option.empty[Meta]
-            }.getOrElse(Option.empty[Meta])
-          }.getOrElse(Option.empty[Meta])
+              }
+            }
         }
-      } yield maybeTMDB
+      }
     }
 
     def getPosterData(tmdbPosterUri: Uri): F[Option[Array[Byte]]] = {
@@ -150,7 +143,10 @@ object TMDBImg extends UriInterpolator {
       maybePosterPath <- getPosterPath(imdbId)
       imgBytes <- maybePosterPath match {
         case Some(posterPath) => getPosterImg(posterPath, size)
-        case _ => Sync[F].delay(Option.empty[Array[Byte]])
+        case _                => Sync[F].delay {
+          L.warn(s"Using default $size image")
+          Some(defImgMap(size))
+        }
       }
     } yield imgBytes
 
