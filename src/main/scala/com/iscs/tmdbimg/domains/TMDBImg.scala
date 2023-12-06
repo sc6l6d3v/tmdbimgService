@@ -87,15 +87,17 @@ object TMDBImg extends UriInterpolator {
         resp <- if (!hasKey) {
           for {
             (getTime, tmdbMaybe) <- Clock[F].timed(getMetaData(tmdbUri))
-            _ <- Sync[F].delay(L.info(s"got MetaData in {} ms", getTime.toMillis))
+            _ <- Sync[F].delay(L.info(s"got fresh MetaData in {} ms", getTime.toMillis))
             _ <- tmdbMaybe match {
               case Some(tmdb) => setRedisKey(key, tmdb.toJson)
               case _          => Sync[F].unit
             }
           } yield tmdbMaybe
-        } else {
-          getMetaFromRedis(key)
-        }
+        } else
+          for {
+            (getTime, redisMetaMaybe) <- Clock[F].timed(getMetaFromRedis(key))
+            _ <- Sync[F].delay(L.info(s"got cached MetaData in {} ms", getTime.toMillis))
+          } yield redisMetaMaybe
       } yield resp
     }
 
@@ -108,14 +110,17 @@ object TMDBImg extends UriInterpolator {
         resp <- if (!hasKey) {
           for {
             (getTime, tmdbMaybe) <- Clock[F].timed(getPosterData(tmdbUri))
-            _ <- Sync[F].delay(L.info(s"got PosterData in {} ms", getTime.toMillis))
+            _ <- Sync[F].delay(L.info(s"got fresh PosterData in {} ms", getTime.toMillis))
             _ <- tmdbMaybe match {
-              case Some(tmdb) => setRedisKey(key, B64Encoder.encodeToString(tmdb)) //tmdb.map(_.toChar).mkString)
+              case Some(tmdb) => setRedisKey(key, B64Encoder.encodeToString(tmdb))
               case _          => Sync[F].unit
             }
           } yield tmdbMaybe
         } else
-          getImgFromRedis(key)
+          for {
+            (getTime, redisImgMaybe) <- Clock[F].timed(getImgFromRedis(key))
+            _ <- Sync[F].delay(L.info(s"got cached PosterData in {} ms", getTime.toMillis))
+          } yield redisImgMaybe
       } yield resp
     }
 
