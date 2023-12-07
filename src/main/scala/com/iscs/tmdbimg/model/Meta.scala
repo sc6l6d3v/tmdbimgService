@@ -4,10 +4,11 @@ import zio.json._
 
 @jsonDiscriminator("type")
 sealed trait Meta extends Product with Serializable
-final case class TMDBPersonKnownFor(adult: Boolean, backdrop_path: String, id: Int, title: String, original_language: String,
-                                    original_title: String, overview: String, poster_path: String, media_type: String,
-                                    genre_ids: List[Int], popularity: Double, release_date: String, video: Boolean,
-                                    vote_average: Double, vote_count: Int)
+final case class TMDBPersonKnownFor(adult: Boolean, backdrop_path: Option[String], id: Int, title: String,
+                                    original_language: String, original_title: String, overview: String,
+                                    poster_path: Option[String], media_type: String, genre_ids: List[Int],
+                                    popularity: Double, release_date: String, video: Boolean, vote_average: Double,
+                                    vote_count: Int)
 
 object TMDBPersonKnownFor {
   implicit val tmdbPersonKnownForDecoder: JsonDecoder[TMDBPersonKnownFor] = DeriveJsonDecoder.gen[TMDBPersonKnownFor]
@@ -16,9 +17,10 @@ object TMDBPersonKnownFor {
 
 @jsonHint("MovieResults")
 final case class MovieResults(adult: Boolean, backdrop_path: Option[String], id: Int, title: String,
-                              original_language: String, original_title: String, overview: String, poster_path: String,
-                              media_type: String, genre_ids: List[Int], popularity: Double, release_date: String,
-                              video: Boolean, vote_average: Double, vote_count: Int) extends Meta
+                              original_language: String, original_title: String, overview: String,
+                              poster_path: Option[String], media_type: String, genre_ids: List[Int],
+                              popularity: Double, release_date: String, video: Boolean, vote_average: Double,
+                              vote_count: Int) extends Meta
 
 object MovieResults {
   implicit val movieResultsDecoder: JsonDecoder[MovieResults] = DeriveJsonDecoder.gen[MovieResults]
@@ -31,8 +33,8 @@ final case class PersonResults(adult: Boolean, id: Int, name: String, original_n
                          profile_path: String, known_for: List[TMDBPersonKnownFor]) extends Meta
 
 @jsonHint("TVResults")
-final case class TVResults(adult: Boolean, backdrop_path: String, id: Int, name: String, original_language: String,
-                     original_name: String, overview: String, poster_path: String, media_type: String,
+final case class TVResults(adult: Boolean, backdrop_path: Option[String], id: Int, name: String, original_language: String,
+                     original_name: String, overview: String, poster_path: Option[String], media_type: String,
                      genre_ids: List[Int], popularity: Double, first_air_date: String,
                      vote_average: Double, vote_count: Int, origin_country: List[String]) extends Meta
 
@@ -45,7 +47,7 @@ object TVResults {
 case class EpisodeResults(id: Int, name: String, overview: String, media_type: String,
                           vote_average: Double, vote_count: Int, air_date: String, episode_number: Int,
                           episode_type: String, production_code: String, runtime: Int, season_number: Int,
-                          show_id: Int, still_path: String) extends Meta
+                          show_id: Int, still_path: Option[String]) extends Meta
                           
 object EpisodeResults {
   implicit val episodeResultsDecoder: JsonDecoder[EpisodeResults] = DeriveJsonDecoder.gen[EpisodeResults]

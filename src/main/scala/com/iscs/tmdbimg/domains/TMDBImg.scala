@@ -127,10 +127,10 @@ object TMDBImg extends UriInterpolator {
     def meta2Poster(meta: Meta): F[Option[String]] = for {
       path <- Sync[F].delay {
         meta match {
-          case movie: MovieResults => Some(movie.poster_path)
-          case series: TVResults => Some(series.poster_path)
-          case episode: EpisodeResults => Some(episode.still_path)
-          case person: PersonResults => Some(person.known_for.head.poster_path)
+          case movie: MovieResults => movie.poster_path
+          case series: TVResults => series.poster_path
+          case episode: EpisodeResults => episode.still_path
+          case person: PersonResults => person.known_for.head.poster_path
           case _ => None
         }
       }
