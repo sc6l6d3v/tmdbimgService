@@ -44,7 +44,7 @@ object TVResults {
 }
 
 @jsonHint("EpisodeResults")
-case class EpisodeResults(id: Int, name: String, overview: String, media_type: String,
+final case class EpisodeResults(id: Int, name: String, overview: String, media_type: String,
                           vote_average: Double, vote_count: Int, air_date: String, episode_number: Int,
                           episode_type: String, production_code: String, runtime: Int, season_number: Int,
                           show_id: Int, still_path: Option[String]) extends Meta
@@ -54,7 +54,7 @@ object EpisodeResults {
   implicit val episodeResultsEncoder: JsonEncoder[EpisodeResults] = DeriveJsonEncoder.gen[EpisodeResults]
 }
 
-case class MediaTypes(movie_results: List[Meta] = List(),
+final case class MediaTypes(movie_results: List[Meta] = List(),
                       person_results: List[Meta] = List(),
                       tv_results: List[Meta] = List(),
                       tv_episode_results: List[Meta] = List(),
@@ -78,4 +78,13 @@ object Meta {
   implicit val tmdbMetaDecoder: JsonDecoder[Meta] = DeriveJsonDecoder.gen[Meta]
   implicit val tmdbMetaEncoder: JsonEncoder[Meta] = DeriveJsonEncoder.gen[Meta]
 }
+
+final case class OnlyPath(path: String)
+
+object OnlyPath {
+  implicit val onlyPathDecoder: JsonDecoder[OnlyPath] = DeriveJsonDecoder.gen[OnlyPath]
+  implicit val onlyPathEncoder: JsonEncoder[OnlyPath] = DeriveJsonEncoder.gen[OnlyPath]
+}
+
+
 

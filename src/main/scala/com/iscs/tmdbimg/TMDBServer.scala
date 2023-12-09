@@ -25,7 +25,8 @@ object TMDBServer {
 
   def getServices[F[_]: Async](sttpClient: SttpBackend[F, Fs2Streams[F] with capabilities.WebSockets])
                               (implicit cmd: RedisCommands[F, String, String],
-                               defImgMap: Map[String, Array[Byte]]): F[HttpApp[F]] = {
+                               defImgMap: Map[String, Array[Byte]],
+                               defPathMap: Map[String, String]): F[HttpApp[F]] = {
     for {
       geoip   <- Sync[F].delay(TMDBImg.impl[F](sttpClient))
       httpApp <- Sync[F].delay(

@@ -5,7 +5,7 @@ import cats.effect.kernel.Clock
 import cats.implicits._
 import com.iscs.tmdbimg.api.{FIND, POSTER, TMDBApiUri}
 import com.iscs.tmdbimg.model.MediaTypes._
-import com.iscs.tmdbimg.model.{EpisodeResults, MediaTypes, Meta, MovieResults, PersonResults, TVResults}
+import com.iscs.tmdbimg.model.{EpisodeResults, MediaTypes, Meta, MovieResults, OnlyPath, PersonResults, TVResults}
 import com.typesafe.scalalogging.Logger
 import dev.profunktor.redis4cats.RedisCommands
 import fs2.Stream
@@ -19,6 +19,7 @@ import java.util.Base64
 
 trait TMDBImg[F[_]] extends Cache[F] {
   def getPoster(imdbid: String, size: String): Stream[F, Byte]
+  def getPath(imdbid: String, size: String): F[OnlyPath]
 }
 
 object TMDBImg extends UriInterpolator {
@@ -34,7 +35,9 @@ object TMDBImg extends UriInterpolator {
 
   def impl[F[_] : Sync](S: SttpBackend[F, Fs2Streams[F] with capabilities.WebSockets])
                        (implicit cmd: RedisCommands[F, String, String],
-                        defImgMap: Map[String, Array[Byte]]): TMDBImg[F] = new TMDBImg[F] {
+                        defImgMap: Map[String, Array[Byte]],
+                        defPathMap: Map[String, String],
+                       ): TMDBImg[F] = new TMDBImg[F] {
 
     def getMetaData(tmdbUri: Uri): F[Option[Meta]] = {
       basicRequest.get(tmdbUri).send(S).flatMap { responseEither =>
@@ -162,6 +165,10 @@ object TMDBImg extends UriInterpolator {
         case _              => Stream.empty
       }
     } yield bytes
+
+    override def getPath(imdbid: String, size: String): F[OnlyPath] = for {
+      maybePosterPath <- getPosterPath(imdbid)
+    } yield OnlyPath(maybePosterPath.getOrElse(defPathMap(size)))
   }
 }
 

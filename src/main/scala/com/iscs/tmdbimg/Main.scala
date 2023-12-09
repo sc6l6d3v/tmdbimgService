@@ -17,12 +17,18 @@ object Main extends IOApp {
     sttpRes     <- HttpClientFs2Backend.resource[IO]()
     defSBytes   <- new DefaultImageConfig[IO](s"/$DefaultImgS").getResource
     defBBytes   <- new DefaultImageConfig[IO](s"/$DefaultImgB").getResource
-  } yield (redis, sttpRes, Map("S" -> defSBytes, "B" -> defBBytes))
+  } yield (
+    redis,
+    sttpRes,
+    Map("S" -> defSBytes, "B" -> defBBytes),
+    Map("S" -> DefaultImgS, "B" -> DefaultImgB)
+  )
 
   def run(args: List[String]): IO[ExitCode] = for {
-    ec <- resources.use { case (cmd, sttpCli, map) =>
+    ec <- resources.use { case (cmd, sttpCli, imgMap, pathMap) =>
       implicit val redisCmd: RedisCommands[IO, String, String] = cmd
-      implicit val defImgMap: Map[String, Array[Byte]] = map
+      implicit val defImgMap: Map[String, Array[Byte]] = imgMap
+      implicit val defPathMap: Map[String, String] = pathMap
       for {
         _ <- IO.delay(L.info("starting service"))
         services <- TMDBServer.getServices(sttpCli)
