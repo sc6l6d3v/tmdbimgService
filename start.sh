@@ -13,4 +13,4 @@ docker run --net rs-net \
            --env CLIENTPOOL --env SERVERPOOL \
            --restart on-failure \
 	   --name tmdbimg \
-           -d -p 5052:5050 -p 8082:8080 nanothermite/tmdbimg:rest
+           -d -p 5052:5050 -p 8082:8080 nanothermite/tmdbimg:latest
