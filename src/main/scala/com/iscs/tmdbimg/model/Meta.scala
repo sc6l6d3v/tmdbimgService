@@ -46,7 +46,7 @@ object TVResults {
 @jsonHint("EpisodeResults")
 final case class EpisodeResults(id: Int, name: String, overview: String, media_type: String,
                           vote_average: Double, vote_count: Int, air_date: String, episode_number: Int,
-                          episode_type: String, production_code: String, runtime: Int, season_number: Int,
+                          episode_type: String, production_code: String, runtime: Option[Int], season_number: Int,
                           show_id: Int, still_path: Option[String]) extends Meta
                           
 object EpisodeResults {

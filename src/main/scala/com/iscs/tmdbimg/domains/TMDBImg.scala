@@ -51,15 +51,11 @@ object TMDBImg extends UriInterpolator {
               val pattern     = s""""$k":\\[\\{"""
               val replacement = s""""$k":\\[{"type":"$v","""
               jsonStr.replaceAll(pattern, replacement)
-            }.fromJson[MediaTypes].left.map(new Exception(_))
-            // Convert Either[String, MediaTypes] to Either[Throwable, MediaTypes]
+            }.fromJson[MediaTypes]
+            .left.map(new Exception(_)) // Convert Either[String, MediaTypes] to Either[Throwable, MediaTypes]
             Sync[F].fromEither(decoded).map { mt =>
-              if (mt.movie_results.nonEmpty) mt.movie_results.headOption
-              else if (mt.person_results.nonEmpty) mt.person_results.headOption
-              else if (mt.tv_results.nonEmpty) mt.tv_results.headOption
-              else if (mt.tv_episode_results.nonEmpty) mt.tv_episode_results.headOption
-              else if (mt.tv_season_results.nonEmpty) mt.tv_season_results.headOption
-              else {
+              List(mt.movie_results, mt.person_results, mt.tv_results,
+                mt.tv_episode_results, mt.tv_season_results).flatten.headOption.orElse {
                 L.warn(s"No data key=${tmdbUri.path.last}")
                 Option.empty[Meta]
               }
