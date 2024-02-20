@@ -33,8 +33,7 @@ trait Cache[F[_]] {
 
   def setRedisKey[S[_]: Sync](key: String, inpValue: String)(
     implicit cmd: RedisCommands[S, String, String]): S[Unit] = for {
-    asString <- Sync[S].delay(inpValue)
-    (getTime, _) <- Clock[S].timed(cmd.setEx(key, asString, expiryTime))
-    _ <- Sync[S].delay(L.info("\"setting key\" key={} value={}... ms={}", key, asString.take(20), getTime.toMillis))
+    (getTime, _) <- Clock[S].timed(cmd.setEx(key, inpValue, expiryTime))
+    _ <- Sync[S].delay(L.info("\"setting key\" key={} value={}... ms={}", key, inpValue.take(20), getTime.toMillis))
   } yield ()
 }

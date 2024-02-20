@@ -25,7 +25,7 @@ object TMDBRoutes {
       case _@GET -> "meta" /: imdbKey =>
         Ok(for {
           pathParts <- Stream.eval(Sync[F].delay(imdbKey.segments.toList))
-          _ <- Stream.eval(Sync[F].delay(L.info(s""""meta request" key=$imdbKey size=${pathParts.head}""")))
+          _ <- Stream.eval(Sync[F].delay(L.info(s""""meta request" key=$imdbKey size=${pathParts.last.encoded}""")))
           resp <- C.getPoster(pathParts.head.encoded,
             if (pathParts.size == 2) pathParts.tail.head.encoded else "S"
           )

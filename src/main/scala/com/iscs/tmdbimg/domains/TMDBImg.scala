@@ -85,13 +85,13 @@ object TMDBImg extends UriInterpolator {
         tmdbUri <- Sync[F].delay(uri"$tmdbExpr")
         resp <- if (!hasKey) {
           for {
-            (getTime, tmdbMaybe) <- Clock[F].timed(getMetaData(tmdbUri))
+            (getTime, metaMaybe) <- Clock[F].timed(getMetaData(tmdbUri))
             _ <- Sync[F].delay(L.info(s"got fresh MetaData in {} ms", getTime.toMillis))
-            _ <- tmdbMaybe match {
-              case Some(tmdb) => setRedisKey(key, tmdb.toJson)
+            _ <- metaMaybe match {
+              case Some(tmdb) => checkSetMeta(tmdb, key)
               case _          => Sync[F].unit
             }
-          } yield tmdbMaybe
+          } yield metaMaybe
         } else
           for {
             (getTime, redisMetaMaybe) <- Clock[F].timed(getMetaFromRedis(key))
@@ -134,6 +134,15 @@ object TMDBImg extends UriInterpolator {
         }
       }
     } yield path
+
+    def checkSetMeta(tmdb: Meta, key: String): F[Unit] = {
+      meta2Poster(tmdb).flatMap {
+        case Some(_) =>
+          Sync[F].delay(L.info(s"get Meta with path")) *> setRedisKey(key, tmdb.toJson)
+        case _ =>
+          Sync[F].delay(L.info(s"got Meta without path"))
+      }
+    }
 
     def getPosterPath(imdbId: String): F[Option[String]] = for {
       mayBeMeta <- getMeta(imdbId)
