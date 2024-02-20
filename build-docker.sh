@@ -3,9 +3,6 @@
 export  $(cat .env | grep -v ^\# | xargs)
 
     PORT=8080 \
-    BINDHOST=0.0.0.0 \
-    CLIENTPOOL=128 \
-    SERVERPOOL=128 \
 docker build --build-arg rediskey=$REDISKEY \
              --build-arg redishost=$REDISHOST \
              --build-arg tmdbkey=$TMDBKEY \
@@ -14,4 +11,5 @@ docker build --build-arg rediskey=$REDISKEY \
              --build-arg clientpool=$CLIENTPOOL \
              --build-arg serverpool=$SERVERPOOL \
              --build-arg OPT_PKGS="telnet bash" \
-             -t tmdbimg:rest .
+             -t $HUBUSER/tmdbimg:`date +"%y%m%d%H%M"` \
+             -t $HUBUSER/tmdbimg:latest .
