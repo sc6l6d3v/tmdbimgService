@@ -5,8 +5,8 @@ lazy val root = (project in file("."))
     organization := "com.iscs",
     name := "tmdbimgService",
     version := "0.1-SNAPSHOT",
-    scalaVersion := "2.13.8",
-    scalacOptions ++= Seq("-target:17"),
+    scalaVersion := "2.13.16",
+    scalacOptions ++= Seq("--release", "21"),
     libraryDependencies ++= Seq(
       http4s.dsl,
       http4s.server,
@@ -19,17 +19,17 @@ lazy val root = (project in file("."))
       redis4cats.stream,
       redis4cats.log4cats,
       specs2.test,
-      weaverTest.cats,
-      weaverTest.specs,
+//      weaverTest.cats,
+//      weaverTest.specs,
       logback.classic,
       logback.logging,
-      cats.retry,
-      cats.log4cats
+//      cats.retry,
+//      cats.log4cats
     ),
-    testFrameworks += new TestFramework("weaver.framework.CatsEffect"),
-    addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
+//    testFrameworks += new TestFramework("weaver.framework.CatsEffect"),
+    addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.13.3" cross CrossVersion.full),
     addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
-    Revolver.enableDebugging(5050, suspend = true)
+    Revolver.enableDebugging(5051, suspend = true)
   )
 
 scalacOptions ++= Seq(

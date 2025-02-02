@@ -5,7 +5,7 @@ import cats.effect.kernel.Clock
 import cats.implicits._
 import com.iscs.tmdbimg.api.{FIND, POSTER, TMDBApiUri}
 import com.iscs.tmdbimg.model.MediaTypes._
-import com.iscs.tmdbimg.model.{EpisodeResults, MediaTypes, Meta, MovieResults, OnlyPath, PersonResults, TVResults}
+import com.iscs.tmdbimg.model._
 import com.typesafe.scalalogging.Logger
 import dev.profunktor.redis4cats.RedisCommands
 import fs2.Stream

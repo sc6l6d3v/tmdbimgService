@@ -7,6 +7,7 @@ import com.iscs.tmdbimg.domains.TMDBImg
 import com.iscs.tmdbimg.routes.TMDBRoutes
 import com.typesafe.scalalogging.Logger
 import dev.profunktor.redis4cats.RedisCommands
+import fs2.io.net.Network
 import org.http4s.HttpApp
 import org.http4s.ember.server._
 import org.http4s.implicits._
@@ -37,6 +38,7 @@ object TMDBServer {
   }
 
   def getResource[F[_]: Async](finalHttpApp: HttpApp[F]): Resource[F, Server] = {
+    implicit val networkInstance: Network[F] = Network.forAsync[F]
     for {
       server <- EmberServerBuilder
         .default[F]
