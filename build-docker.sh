@@ -2,7 +2,6 @@
 # load env vars
 export  $(cat .env | grep -v ^\# | xargs)
 
-    PORT=8080 \
 docker build --build-arg rediskey=$REDISKEY \
              --build-arg redishost=$REDISHOST \
              --build-arg tmdbkey=$TMDBKEY \
