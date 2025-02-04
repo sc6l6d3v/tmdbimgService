@@ -10,5 +10,5 @@ docker build --build-arg rediskey=$REDISKEY \
              --build-arg clientpool=$CLIENTPOOL \
              --build-arg serverpool=$SERVERPOOL \
              --build-arg OPT_PKGS="telnet bash" \
-             -t $HUBUSER/tmdbimg:`date +"%y%m%d%H%M"` \
+             -t $HUBUSER/tmdbimg:`date +"%Y%m%d%H%M"` \
              -t $HUBUSER/tmdbimg:latest .

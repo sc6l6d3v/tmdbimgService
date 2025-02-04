@@ -17,7 +17,7 @@ lazy val root = (project in file("."))
       zio.test_magnolia,
       redis4cats.core,
       redis4cats.stream,
-      redis4cats.log4cats,
+//      redis4cats.log4cats,
       specs2.test,
 //      weaverTest.cats,
 //      weaverTest.specs,
@@ -43,6 +43,11 @@ scalacOptions ++= Seq(
 )
 
 assembly / assemblyMergeStrategy := {
-  case PathList("META-INF", _ @ _*) => MergeStrategy.discard
-  case _ => MergeStrategy.first
+  case PathList("META-INF", "services", xs @ _*) => MergeStrategy.concat
+  case PathList("META-INF", xs @ _*)             => MergeStrategy.discard
+  case "io.netty.versions.properties"            => MergeStrategy.discard
+  case "reference.conf"                          => MergeStrategy.concat
+  // Keep or merge logback.xml instead of discarding it:
+  case "logback.xml"                             => MergeStrategy.first
+  case x                                         => MergeStrategy.first
 }

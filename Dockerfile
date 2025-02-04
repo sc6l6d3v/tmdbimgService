@@ -49,6 +49,8 @@ COPY ["project/plugins.sbt", "project/build.properties", "/tmp/build/project/"]
 
 RUN mkdir -p $PROJECT_HOME/data
 
+RUN mkdir -p $PROJECT_HOME/data/logs
+
 WORKDIR $PROJECT_HOME/data
 
 # We are running http4s on this port so expose it
@@ -58,5 +60,5 @@ EXPOSE 5050
 COPY target/scala-2.13/${APP_NAME}-assembly-$APP_VERSION.jar $PROJECT_HOME/data/$APP_NAME.jar
 
 # This will run at start, it points to the .sh file in the bin directory to start the play app
-ENTRYPOINT [ "java", "-Djava.net.preferIPv4Stack=true", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5050",  "-jar", "$PROJECT_HOME/data/$APP_NAME.jar" ]
+ENTRYPOINT [ "sh", "-c", "exec java -Djava.net.preferIPv4Stack=true -Dlogback.debug=true -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5050 -jar \"$PROJECT_HOME/data/$APP_NAME.jar\"" ]
 # Add this arg to the script if you want to enable remote debugging: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005
