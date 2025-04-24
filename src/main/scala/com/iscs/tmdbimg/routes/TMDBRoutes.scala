@@ -5,10 +5,11 @@ import cats.implicits._
 import com.iscs.tmdbimg.domains.TMDBImg
 import com.typesafe.scalalogging.Logger
 import fs2.Stream
-import org.http4s.{EntityEncoder, HttpRoutes, MediaType}
+import org.http4s.{CacheDirective, EntityEncoder, HttpRoutes, MediaType}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.headers._
 import zio.json.{EncoderOps, JsonEncoder}
+import scala.concurrent.duration._
 
 object TMDBRoutes {
   private val L = Logger[this.type]
@@ -30,6 +31,12 @@ object TMDBRoutes {
             if (pathParts.size == 2) pathParts.tail.head.encoded else "S"
           )
         } yield resp)
+          .map(_.putHeaders(
+            `Cache-Control`(
+              CacheDirective.`public`,
+              CacheDirective.`max-age`(86400 seconds) // 24 hours
+            )
+          ))
       case _@GET -> "path" /: imdbKey =>
         Ok(for {
           pathParts <- Sync[F].delay(imdbKey.segments.toList)
