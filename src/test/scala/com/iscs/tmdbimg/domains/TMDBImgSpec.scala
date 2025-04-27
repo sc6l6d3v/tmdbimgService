@@ -1,8 +1,8 @@
 package com.iscs.tmdbimg.domains
 
-import zio._
-import zio.json._
-import zio.test.Assertion._
+import zio.*
+import zio.json.*
+import zio.test.Assertion.*
 import zio.test.{TestAspect, _}
 
 object TMDBImgSpec extends ZIOSpecDefault {
@@ -73,34 +73,34 @@ object TMDBImgSpec extends ZIOSpecDefault {
   val spec: Spec[Environment, Any] =
     suite("TMDBImgSpec")(
       test("check kid1") {
-        import examplenohintsum._
+        import examplenohintsum.*
 
         assert(kid1.fromJson[Parent])(isRight(equalTo(Child1(15))))
       },
       test("check kid2") {
-        import examplenohintsum._
+        import examplenohintsum.*
 
         assert(kid2.fromJson[Parent])(isRight(equalTo(Child2("25"))))
       },
       test("check kid1 hint") {
-        import examplehintsum._
+        import examplehintsum.*
 
         assert(kid1Hint.fromJson[Parent])(isRight(equalTo(Child1(15))))
       },
       test("check kid2 hint") {
-        import examplehintsum._
+        import examplehintsum.*
 
         assert(kid2Hint.fromJson[Parent])(isRight(equalTo(Child2("25"))))
       },
       test("check empty kids") {
-        import examplehintsum._
+        import examplehintsum.*
 
         val emptyKidsCC = Kids(List.empty[Parent], List.empty[Parent])
 
         assert(emptyKids.fromJson[Kids])(isRight(equalTo(emptyKidsCC)))
       },
       test("check left kid") {
-        import examplenohintsum._
+        import examplenohintsum.*
 
         val child1: Parent = Child1(15)
         val kidsCC         = Kids(List(child1), List.empty[Parent])
@@ -108,7 +108,7 @@ object TMDBImgSpec extends ZIOSpecDefault {
         assert(testKidsLeft.fromJson[Kids])(isRight(equalTo(kidsCC)))
       },
       test("check right kid") {
-        import examplenohintsum._
+        import examplenohintsum.*
 
         val child2: Parent = Child2("25")
         val kidsCC         = Kids(List.empty[Parent], List(child2))
@@ -116,7 +116,7 @@ object TMDBImgSpec extends ZIOSpecDefault {
         assert(testKidsRight.fromJson[Kids])(isRight(equalTo(kidsCC)))
       },
       test("check left kid hint") {
-        import examplehintsum._
+        import examplehintsum.*
 
         val child1: Parent = Child1(15)
         val kidsCC         = Kids(List(child1), List.empty[Parent])
@@ -124,7 +124,7 @@ object TMDBImgSpec extends ZIOSpecDefault {
         assert(testKidsLeftHint.fromJson[Kids])(isRight(equalTo(kidsCC)))
       },
       test("check right kid hint") {
-        import examplehintsum._
+        import examplehintsum.*
 
         val child2: Parent = Child2("25")
         val kidsCC         = Kids(List.empty[Parent], List(child2))

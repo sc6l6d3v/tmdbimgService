@@ -1,15 +1,15 @@
 package com.iscs.tmdbimg.routes
 
 import cats.effect.Sync
-import cats.implicits._
+import cats.implicits.*
 import com.iscs.tmdbimg.domains.TMDBImg
 import com.typesafe.scalalogging.Logger
 import fs2.Stream
 import org.http4s.{CacheDirective, EntityEncoder, HttpRoutes, MediaType}
 import org.http4s.dsl.Http4sDsl
-import org.http4s.headers._
+import org.http4s.headers.*
 import zio.json.{EncoderOps, JsonEncoder}
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 object TMDBRoutes {
   private val L = Logger[this.type]
@@ -22,7 +22,7 @@ object TMDBRoutes {
 
   def TmdbRoutes[F[_]: Sync](C: TMDBImg[F]): HttpRoutes[F] = {
     val dsl = new Http4sDsl[F] {}
-    import dsl._
+    import dsl.*
     HttpRoutes.of[F] {
       case _ @GET -> "meta" /: imdbKey =>
         Ok(for {

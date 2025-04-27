@@ -1,16 +1,16 @@
 package com.iscs.tmdbimg
 
 import cats.effect.{Async, Resource, Sync}
-import cats.implicits._
-import com.comcast.ip4s._
+import cats.implicits.*
+import com.comcast.ip4s.*
 import com.iscs.tmdbimg.domains.TMDBImg
 import com.iscs.tmdbimg.routes.TMDBRoutes
 import com.typesafe.scalalogging.Logger
 import dev.profunktor.redis4cats.RedisCommands
 import fs2.io.net.Network
 import org.http4s.HttpApp
-import org.http4s.ember.server._
-import org.http4s.implicits._
+import org.http4s.ember.server.*
+import org.http4s.implicits.*
 import org.http4s.server.middleware.{Logger => hpLogger}
 import org.http4s.server.{Router, Server}
 import sttp.capabilities

@@ -2,18 +2,18 @@ package com.iscs.tmdbimg.domains
 
 import cats.effect.Sync
 import cats.effect.kernel.Clock
-import cats.implicits._
+import cats.implicits.*
 import com.iscs.tmdbimg.api.{FIND, POSTER, TMDBApiUri}
-import com.iscs.tmdbimg.model.MediaTypes._
-import com.iscs.tmdbimg.model._
+import com.iscs.tmdbimg.model.MediaTypes.*
+import com.iscs.tmdbimg.model.*
 import com.typesafe.scalalogging.Logger
 import dev.profunktor.redis4cats.RedisCommands
 import fs2.Stream
 import sttp.capabilities
 import sttp.capabilities.fs2.Fs2Streams
-import sttp.client3._
+import sttp.client3.*
 import sttp.model.{Uri, UriInterpolator}
-import zio.json._
+import zio.json.*
 
 import java.util.Base64
 

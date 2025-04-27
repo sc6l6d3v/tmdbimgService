@@ -3,7 +3,7 @@ package com.iscs.tmdbimg.config
 import cats.effect.Resource
 import cats.effect.kernel.Sync
 import dev.profunktor.redis4cats.Redis
-import dev.profunktor.redis4cats.connection._
+import dev.profunktor.redis4cats.connection.*
 import dev.profunktor.redis4cats.data.RedisCodec
 import dev.profunktor.redis4cats.effect.MkRedis
 import dev.profunktor.redis4cats.RedisCommands

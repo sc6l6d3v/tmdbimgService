@@ -2,7 +2,7 @@ package com.iscs.tmdbimg.domains
 
 import cats.effect.Sync
 import cats.effect.kernel.Clock
-import cats.implicits._
+import cats.implicits.*
 import com.iscs.tmdbimg.domains.TMDBImg.fromMeta
 import com.iscs.tmdbimg.model.Meta
 import com.typesafe.scalalogging.Logger

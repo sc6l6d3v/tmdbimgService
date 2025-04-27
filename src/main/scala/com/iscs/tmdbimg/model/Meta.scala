@@ -1,6 +1,6 @@
 package com.iscs.tmdbimg.model
 
-import zio.json._
+import zio.json.*
 
 @jsonDiscriminator("type")
 sealed trait Meta extends Product with Serializable
