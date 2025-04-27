@@ -38,7 +38,7 @@
     <logger name="io.circe" level="DEBUG" />
     <logger name="sttp.client3" level="DEBUG" />
 
-  <root level="DEBUG">
+  <root level="INFO">
       <appender-ref ref="DEFAULT-FILE-ASYNC" />
       <appender-ref ref="DEFAULT-STDOUT-ASYNC" />
   </root>

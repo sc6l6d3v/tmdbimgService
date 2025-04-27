@@ -27,6 +27,7 @@ lazy val root = (project in file("."))
       logback.logging
     ),
 //    testFrameworks += new TestFramework("weaver.framework.CatsEffect"),
+    Compile / mainClass      := Some("com.iscs.tmdbimg.Main"),
     Revolver.enableDebugging(5051, suspend = true)
   )
 
