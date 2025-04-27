@@ -33,7 +33,7 @@ object TMDBImg extends UriInterpolator {
     case Left(_) => None
   }
 
-  def impl[F[_] : Sync](S: SttpBackend[F, Fs2Streams[F] with capabilities.WebSockets])
+  def impl[F[_] : Sync](S: SttpBackend[F, Fs2Streams[F] & capabilities.WebSockets])
                        (implicit cmd: RedisCommands[F, String, String],
                         defImgMap: Map[String, Array[Byte]],
                         defPathMap: Map[String, String],
@@ -130,7 +130,7 @@ object TMDBImg extends UriInterpolator {
           case series: TVResults => series.poster_path
           case episode: EpisodeResults => episode.still_path
           case person: PersonResults => person.known_for.head.poster_path
-          case _ => None
+          case null => None
         }
       }
     } yield path

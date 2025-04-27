@@ -24,7 +24,7 @@ object TMDBServer {
 
   private val L = Logger[this.type]
 
-  def getServices[F[_]: Async](sttpClient: SttpBackend[F, Fs2Streams[F] with capabilities.WebSockets])
+  def getServices[F[_]: Async](sttpClient: SttpBackend[F, Fs2Streams[F] & capabilities.WebSockets])
                               (implicit cmd: RedisCommands[F, String, String],
                                defImgMap: Map[String, Array[Byte]],
                                defPathMap: Map[String, String]): F[HttpApp[F]] = {

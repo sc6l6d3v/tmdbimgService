@@ -14,12 +14,12 @@ object TMDBApiUri {
   val findPath = "/3/find"
   val getPoster = "/t/p"
   val keyParam = "api_key"
-  val keyValue = sys.env.getOrElse("TMDBKEY", "NOKEY")
-  val findParams = Map("language" -> "en-US", "external_source" -> "imdb_id")
+  val keyValue: String = sys.env.getOrElse("TMDBKEY", "NOKEY")
+  val findParams: Map[String,String] = Map("language" -> "en-US", "external_source" -> "imdb_id")
   val smallWidth = "w200"
   val bigWidth = "w500"
-  val keyField = s"$keyParam=$keyValue"
-  val reqdParams = findParams.map{ case (k,v) =>
+  val keyField: String = s"$keyParam=$keyValue"
+  val reqdParams: String = findParams.map{ case (k,v) =>
     s"$k=$v"
   }.mkString("&", "&", "")
 

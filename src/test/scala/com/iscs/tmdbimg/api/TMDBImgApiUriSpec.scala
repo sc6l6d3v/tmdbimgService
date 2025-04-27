@@ -16,10 +16,10 @@ class TMDBImgApiUriSpec extends Specification {
   private val fieldMap = Map("language" -> "en-US", "external_source" -> "imdb_id")
   private val fields = fieldMap.map{ case (k,v) => s"$k=$v"}.mkString("&")
 
-  private[this] def baseCheck(): MatchResult[String] =
+  private def baseCheck(): MatchResult[String] =
     TMDBApiUri.builder(TMDBApiUri(FIND, "")) must beEqualTo(s"${fullBase(Some(""))}&$fields")
 
-  private[this] def withIMDBId(): MatchResult[String] =
+  private def withIMDBId(): MatchResult[String] =
     TMDBApiUri.builder(TMDBApiUri(FIND, "tt104343")) must beEqualTo(s"${fullBase(Some("tt104343"))}&$fields")
 
   "TMDBApiUri" >> {
