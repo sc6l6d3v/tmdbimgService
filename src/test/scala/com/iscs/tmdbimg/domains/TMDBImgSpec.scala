@@ -103,7 +103,7 @@ object TMDBImgSpec extends ZIOSpecDefault {
         import examplenohintsum._
 
         val child1: Parent = Child1(15)
-        val kidsCC = Kids(List(child1), List.empty[Parent])
+        val kidsCC         = Kids(List(child1), List.empty[Parent])
 
         assert(testKidsLeft.fromJson[Kids])(isRight(equalTo(kidsCC)))
       },
@@ -111,7 +111,7 @@ object TMDBImgSpec extends ZIOSpecDefault {
         import examplenohintsum._
 
         val child2: Parent = Child2("25")
-        val kidsCC = Kids(List.empty[Parent], List(child2))
+        val kidsCC         = Kids(List.empty[Parent], List(child2))
 
         assert(testKidsRight.fromJson[Kids])(isRight(equalTo(kidsCC)))
       },
@@ -119,7 +119,7 @@ object TMDBImgSpec extends ZIOSpecDefault {
         import examplehintsum._
 
         val child1: Parent = Child1(15)
-        val kidsCC = Kids(List(child1), List.empty[Parent])
+        val kidsCC         = Kids(List(child1), List.empty[Parent])
 
         assert(testKidsLeftHint.fromJson[Kids])(isRight(equalTo(kidsCC)))
       },
@@ -127,11 +127,10 @@ object TMDBImgSpec extends ZIOSpecDefault {
         import examplehintsum._
 
         val child2: Parent = Child2("25")
-        val kidsCC = Kids(List.empty[Parent], List(child2))
+        val kidsCC         = Kids(List.empty[Parent], List(child2))
 
         assert(testKidsRightHint.fromJson[Kids])(isRight(equalTo(kidsCC)))
       }
-
     )
 
   object examplehintsum {
@@ -149,8 +148,7 @@ object TMDBImgSpec extends ZIOSpecDefault {
     case class Child2(prop2: String) extends Parent
 
     @jsonHint("kids")
-    case class Kids(kid1: List[Parent],
-                    kid2: List[Parent])
+    case class Kids(kid1: List[Parent], kid2: List[Parent])
 
     object Kids {
       implicit val decoder: JsonDecoder[Kids] = DeriveJsonDecoder.gen[Kids]
@@ -168,8 +166,7 @@ object TMDBImgSpec extends ZIOSpecDefault {
 
     case class Child2(prop2: String) extends Parent
 
-    case class Kids(kid1: List[Parent],
-                    kid2: List[Parent])
+    case class Kids(kid1: List[Parent], kid2: List[Parent])
 
     object Kids {
       implicit val decoder: JsonDecoder[Kids] = DeriveJsonDecoder.gen[Kids]

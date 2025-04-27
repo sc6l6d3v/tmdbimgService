@@ -18,24 +18,20 @@ import sttp.capabilities.fs2.Fs2Streams
 import sttp.client3.SttpBackend
 
 object TMDBServer {
-  private val port = sys.env.getOrElse("PORT", "8080").toInt
-  private val bindHost = sys.env.getOrElse("BINDHOST", "0.0.0.0")
+  private val port           = sys.env.getOrElse("PORT", "8080").toInt
+  private val bindHost       = sys.env.getOrElse("BINDHOST", "0.0.0.0")
   private val serverPoolSize = sys.env.getOrElse("SERVERPOOL", "16").toInt
 
   private val L = Logger[this.type]
 
-  def getServices[F[_]: Async](sttpClient: SttpBackend[F, Fs2Streams[F] & capabilities.WebSockets])
-                              (implicit cmd: RedisCommands[F, String, String],
-                               defImgMap: Map[String, Array[Byte]],
-                               defPathMap: Map[String, String]): F[HttpApp[F]] = {
+  def getServices[F[_]: Async](
+      sttpClient: SttpBackend[F, Fs2Streams[F] & capabilities.WebSockets]
+  )(implicit cmd: RedisCommands[F, String, String], defImgMap: Map[String, Array[Byte]], defPathMap: Map[String, String]): F[HttpApp[F]] =
     for {
-      geoip   <- Sync[F].delay(TMDBImg.impl[F](sttpClient))
-      httpApp <- Sync[F].delay(
-        Router("/" -> TMDBRoutes.TmdbRoutes[F](geoip))
-          .orNotFound)
+      geoip        <- Sync[F].delay(TMDBImg.impl[F](sttpClient))
+      httpApp      <- Sync[F].delay(Router("/" -> TMDBRoutes.TmdbRoutes[F](geoip)).orNotFound)
       finalHttpApp <- Sync[F].delay(hpLogger.httpApp(logHeaders = true, logBody = false)(httpApp))
     } yield finalHttpApp
-  }
 
   def getResource[F[_]: Async](finalHttpApp: HttpApp[F]): Resource[F, Server] = {
     implicit val networkInstance: Network[F] = Network.forAsync[F]

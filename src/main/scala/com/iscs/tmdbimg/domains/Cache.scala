@@ -11,7 +11,7 @@ import java.util.Base64
 import scala.concurrent.duration.DurationInt
 
 trait Cache[F[_]] {
-  private val L = Logger[this.type]
+  private val L          = Logger[this.type]
   private val B64decoder = Base64.getDecoder
   private val expiryTime = 15.minutes
 
@@ -31,9 +31,8 @@ trait Cache[F[_]] {
     })
   } yield retrieved
 
-  def setRedisKey[S[_]: Sync](key: String, inpValue: String)(
-    implicit cmd: RedisCommands[S, String, String]): S[Unit] = for {
+  def setRedisKey[S[_]: Sync](key: String, inpValue: String)(implicit cmd: RedisCommands[S, String, String]): S[Unit] = for {
     (getTime, _) <- Clock[S].timed(cmd.setEx(key, inpValue, expiryTime))
-    _ <- Sync[S].delay(L.info("\"setting key\" key={} value={}... ms={}", key, inpValue.take(20), getTime.toMillis))
+    _            <- Sync[S].delay(L.info("\"setting key\" key={} value={}... ms={}", key, inpValue.take(20), getTime.toMillis))
   } yield ()
 }

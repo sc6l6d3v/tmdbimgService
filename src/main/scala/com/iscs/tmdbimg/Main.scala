@@ -8,36 +8,40 @@ import dev.profunktor.redis4cats.effect.Log.Stdout._
 import sttp.client3.httpclient.fs2.HttpClientFs2Backend
 
 object Main extends IOApp {
-  private val L = Logger[this.type]
+  private val L           = Logger[this.type]
   private val DefaultImgS = "Default200S.png"
   private val DefaultImgB = "Default500B.png"
 
   private val resources = for {
-    redis       <- new RedisConfig[IO]().resource
-    sttpRes     <- HttpClientFs2Backend.resource[IO]()
-    defSBytes   <- new DefaultImageConfig[IO](s"/$DefaultImgS").getResource
-    defBBytes   <- new DefaultImageConfig[IO](s"/$DefaultImgB").getResource
+    redis     <- new RedisConfig[IO]().resource
+    sttpRes   <- HttpClientFs2Backend.resource[IO]()
+    defSBytes <- new DefaultImageConfig[IO](s"/$DefaultImgS").getResource
+    defBBytes <- new DefaultImageConfig[IO](s"/$DefaultImgB").getResource
   } yield (
     redis,
     sttpRes,
-    Map("S" -> defSBytes, "B" -> defBBytes),
+    Map("S" -> defSBytes, "B"   -> defBBytes),
     Map("S" -> DefaultImgS, "B" -> DefaultImgB)
   )
 
   def run(args: List[String]): IO[ExitCode] = for {
     ec <- resources.use { case (cmd, sttpCli, imgMap, pathMap) =>
       implicit val redisCmd: RedisCommands[IO, String, String] = cmd
-      implicit val defImgMap: Map[String, Array[Byte]] = imgMap
-      implicit val defPathMap: Map[String, String] = pathMap
+      implicit val defImgMap: Map[String, Array[Byte]]         = imgMap
+      implicit val defPathMap: Map[String, String]             = pathMap
       for {
-        _ <- IO.delay(L.info("starting service"))
+        _        <- IO.delay(L.info("starting service"))
         services <- TMDBServer.getServices(sttpCli)
-        ec2 <- TMDBServer.getResource(services).use { _ => IO.never }
+        ec2 <- TMDBServer
+          .getResource(services)
+          .use(_ => IO.never)
           .as(ExitCode.Success)
-          .handleErrorWith(ex => IO {
-            L.error("\"exception during stream startup\" exception={} ex={}", ex.toString, ex)
-            ExitCode.Error
-          })
+          .handleErrorWith(ex =>
+            IO {
+              L.error("\"exception during stream startup\" exception={} ex={}", ex.toString, ex)
+              ExitCode.Error
+            }
+          )
       } yield ec2
     }
   } yield ec

@@ -5,8 +5,8 @@ import org.specs2.mutable.Specification
 
 class TMDBImgApiUriSpec extends Specification {
 
-  private val base = "https://api.themoviedb.org"
-  private val path = "/3/find/"
+  private val base     = "https://api.themoviedb.org"
+  private val path     = "/3/find/"
   private val keyParam = "api_key"
   private val keyValue = sys.env.getOrElse("TMDBKEY", "NOKEY")
   private def fullBase(maybeKey: Option[String]) = maybeKey match {
@@ -14,7 +14,7 @@ class TMDBImgApiUriSpec extends Specification {
     case _         => s"$base$path?$keyParam=$keyValue"
   }
   private val fieldMap = Map("language" -> "en-US", "external_source" -> "imdb_id")
-  private val fields = fieldMap.map{ case (k,v) => s"$k=$v"}.mkString("&")
+  private val fields   = fieldMap.map { case (k, v) => s"$k=$v" }.mkString("&")
 
   private def baseCheck(): MatchResult[String] =
     TMDBApiUri.builder(TMDBApiUri(FIND, "")) must beEqualTo(s"${fullBase(Some(""))}&$fields")
