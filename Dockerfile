@@ -9,10 +9,10 @@
 FROM bellsoft/liberica-openjdk-alpine:21.0.6
 
 # Env variables
-ENV SCALA_VERSION=2.13.16
-# ENV SBT_VERSION   1.3.10
+ENV SCALA_VERSION=3.4.2
+ENV SBT_VERSION=1.10.0
 ENV APP_NAME=tmdbimgService
-ENV APP_VERSION=0.1-SNAPSHOT
+ENV APP_VERSION=1.0
 
 ARG rediskey=key
 ARG redishost=host
@@ -25,27 +25,15 @@ ARG serverpool=128
 ENV REDISKEY=$rediskey
 ENV REDISHOST=$redishost
 ENV GEOIPKEY=$tmdbkey
-ENV PORT=$port
 ENV BINDHOST=$bindhost
 ENV CLIENTPOOL=$clientpool
 ENV SERVERPOOL=$serverpool
 
-RUN \
-   apk add --no-cache curl bash busybox-extras
-
-# ENV variables for App
+RUN apk add --no-cache curl bash busybox-extras
 
 # Define working directory
 WORKDIR /root
 ENV PROJECT_HOME=/usr/src
-
-COPY [".env", "/tmp/build/"]
-COPY ["build.sbt", "/tmp/build/"]
-COPY ["project/plugins.sbt", "project/build.properties", "/tmp/build/project/"]
-#RUN cd /tmp/build && \
-# sbt update && \
-# sbt compile && \
-# sbt assembly
 
 RUN mkdir -p $PROJECT_HOME/data
 
@@ -57,7 +45,7 @@ WORKDIR $PROJECT_HOME/data
 EXPOSE 8080
 EXPOSE 5050
 
-COPY target/scala-2.13/${APP_NAME}-assembly-$APP_VERSION.jar $PROJECT_HOME/data/$APP_NAME.jar
+COPY target/scala-${SCALA_VERSION}/${APP_NAME}-assembly-$APP_VERSION.jar $PROJECT_HOME/data/$APP_NAME.jar
 
 # This will run at start, it points to the .sh file in the bin directory to start the play app
 ENTRYPOINT [ "sh", "-c", "exec java -Djava.net.preferIPv4Stack=true -Dlogback.debug=true -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5050 -jar \"$PROJECT_HOME/data/$APP_NAME.jar\"" ]
