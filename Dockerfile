@@ -24,7 +24,7 @@ ARG serverpool=128
 
 ENV REDISKEY=$rediskey
 ENV REDISHOST=$redishost
-ENV GEOIPKEY=$tmdbkey
+ENV TMDBKEY=$tmdbkey
 ENV BINDHOST=$bindhost
 ENV CLIENTPOOL=$clientpool
 ENV SERVERPOOL=$serverpool

@@ -39,7 +39,7 @@ object TMDBImg extends UriInterpolator {
     new TMDBImg[F] {
 
       def getMetaData(tmdbUri: Uri): F[Option[Meta]] =
-        basicRequest.get(tmdbUri).send(S).flatMap { responseEither =>
+        basicRequest.header("Accept-Encoding", "identity").get(tmdbUri).send(S).flatMap { responseEither =>
           responseEither.body match {
             case Left(error) =>
               L.warn(s"Request failed: $error")
@@ -67,7 +67,7 @@ object TMDBImg extends UriInterpolator {
 
       def getPosterData(tmdbPosterUri: Uri): F[Option[Array[Byte]]] =
         for {
-          imgBytesReq    <- Sync[F].delay(quickRequest.contentType("image/jpeg").get(tmdbPosterUri).response(asByteArray))
+          imgBytesReq    <- Sync[F].delay(quickRequest.contentType("image/jpeg").header("Accept-Encoding", "identity").get(tmdbPosterUri).response(asByteArray))
           responseEither <- imgBytesReq.send(S)
           maybeBytes <- Sync[F].delay {
             responseEither.body
@@ -166,10 +166,15 @@ object TMDBImg extends UriInterpolator {
       } yield imgBytes
 
       override def getPoster(imdbId: String, size: String): Stream[F, Byte] = for {
-        maybeBytes <- Stream.eval(getPosterEffect(imdbId, size))
+        maybeBytes <- Stream.eval(
+          getPosterEffect(imdbId, size).handleError { e =>
+            L.error(s"getPosterEffect failed for $imdbId/$size: ${e.getMessage}", e)
+            Some(defImgMap(size))
+          }
+        )
         bytes <- maybeBytes match {
           case Some(imgBytes) => Stream.emits(imgBytes)
-          case _              => Stream.empty
+          case _              => Stream.emits(defImgMap(size))
         }
       } yield bytes
 

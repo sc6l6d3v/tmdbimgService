@@ -1,10 +1,12 @@
 package com.iscs.tmdbimg
 
-import cats.effect.{ExitCode, IO, IOApp}
+import cats.effect.{ExitCode, IO, IOApp, Resource}
+import cats.effect.std.Dispatcher
 import com.iscs.tmdbimg.config.{DefaultImageConfig, RedisConfig}
 import com.typesafe.scalalogging.Logger
 import dev.profunktor.redis4cats.RedisCommands
 import dev.profunktor.redis4cats.effect.Log.Stdout.*
+import java.net.http.HttpClient
 import sttp.client3.httpclient.fs2.HttpClientFs2Backend
 
 object Main extends IOApp {
@@ -14,7 +16,13 @@ object Main extends IOApp {
 
   private val resources = for {
     redis     <- new RedisConfig[IO]().resource
-    sttpRes   <- HttpClientFs2Backend.resource[IO]()
+    dispatcher <- Dispatcher.parallel[IO]
+    sttpRes    <- Resource.make(
+                    IO.delay(HttpClientFs2Backend.usingClient[IO](
+                      HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build(),
+                      dispatcher
+                    ))
+                  )(_.close())
     defSBytes <- new DefaultImageConfig[IO](s"/$DefaultImgS").getResource
     defBBytes <- new DefaultImageConfig[IO](s"/$DefaultImgB").getResource
   } yield (
