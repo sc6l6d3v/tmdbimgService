@@ -19,6 +19,7 @@ import java.util.Base64
 
 trait TMDBImg[F[_]] extends Cache[F] {
   def getPoster(imdbid: String, size: String): Stream[F, Byte]
+  def getPosterResult(imdbid: String, size: String): F[(Array[Byte], Boolean)]
   def getPath(imdbid: String, size: String): F[OnlyPath]
 }
 
@@ -153,30 +154,39 @@ object TMDBImg extends UriInterpolator {
         }
       } yield path
 
-      def getPosterEffect(imdbId: String, size: String): F[Option[Array[Byte]]] = for {
+      def getPosterEffect(imdbId: String, size: String): F[(Array[Byte], Boolean)] = for {
         maybePosterPath <- getPosterPath(imdbId)
-        imgBytes <- maybePosterPath match {
-          case Some(posterPath) => getPosterImg(posterPath, size)
+        result <- maybePosterPath match {
+          case Some(posterPath) =>
+            getPosterImg(posterPath, size).map {
+              case Some(bytes) => (bytes, true)
+              case None =>
+                L.warn(s"Using default $size image")
+                (defImgMap(size), false)
+            }
           case _ =>
             Sync[F].delay {
               L.warn(s"Using default $size image")
-              Some(defImgMap(size))
+              (defImgMap(size), false)
             }
         }
-      } yield imgBytes
+      } yield result
+
+      override def getPosterResult(imdbId: String, size: String): F[(Array[Byte], Boolean)] =
+        getPosterEffect(imdbId, size).handleError { e =>
+          L.error(s"getPosterEffect failed for $imdbId/$size: ${e.getMessage}", e)
+          (defImgMap(size), false)
+        }
 
       override def getPoster(imdbId: String, size: String): Stream[F, Byte] = for {
-        maybeBytes <- Stream.eval(
+        (bytes, _) <- Stream.eval(
           getPosterEffect(imdbId, size).handleError { e =>
             L.error(s"getPosterEffect failed for $imdbId/$size: ${e.getMessage}", e)
-            Some(defImgMap(size))
+            (defImgMap(size), false)
           }
         )
-        bytes <- maybeBytes match {
-          case Some(imgBytes) => Stream.emits(imgBytes)
-          case _              => Stream.emits(defImgMap(size))
-        }
-      } yield bytes
+        byte <- Stream.emits(bytes)
+      } yield byte
 
       override def getPath(imdbid: String, size: String): F[OnlyPath] = for {
         maybePosterPath <- getPosterPath(imdbid)

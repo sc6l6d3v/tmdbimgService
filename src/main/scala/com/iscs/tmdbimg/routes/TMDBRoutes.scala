@@ -25,19 +25,16 @@ object TMDBRoutes {
     import dsl.*
     HttpRoutes.of[F] {
       case _ @GET -> "meta" /: imdbKey =>
-        Ok(for {
-          pathParts <- Stream.eval(Sync[F].delay(imdbKey.segments.toList))
-          _         <- Stream.eval(Sync[F].delay(L.info(s""""meta request" key=$imdbKey size=${pathParts.last.encoded}""")))
-          resp      <- C.getPoster(pathParts.head.encoded, if (pathParts.size == 2) pathParts.tail.head.encoded else "S")
-        } yield resp)
-          .map(
-            _.putHeaders(
-              `Cache-Control`(
-                CacheDirective.`public`,
-                CacheDirective.`max-age`(86400 seconds) // 24 hours
-              )
-            )
-          )
+        for {
+          pathParts       <- Sync[F].delay(imdbKey.segments.toList)
+          _               <- Sync[F].delay(L.info(s""""meta request" key=$imdbKey size=${pathParts.last.encoded}"""))
+          (bytes, isReal) <- C.getPosterResult(pathParts.head.encoded, if (pathParts.size == 2) pathParts.tail.head.encoded else "S")
+          resp            <- Ok(Stream.emits(bytes).covary[F])
+        } yield
+          if (isReal)
+            resp.putHeaders(`Cache-Control`(CacheDirective.`public`, CacheDirective.`max-age`(86400 seconds)))
+          else
+            resp.putHeaders(`Cache-Control`(CacheDirective.`no-store`))
       case _ @GET -> "path" /: imdbKey =>
         Ok(for {
           pathParts <- Sync[F].delay(imdbKey.segments.toList)
